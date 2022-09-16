@@ -50,27 +50,29 @@ function GameLayout() {
     { color: "blue", number: "+4" },
   ];
   const [stack, setStack] = useState([]);
-  const [playerDeck, setPlayerDeck] = useState({ player1: [], player2: [] });
+  const [playerDeck, setPlayerDeck] = useState({
+    player1: [],
+    player2: [],
+  });
   const [baseCard, setBaseCard] = useState();
 
   const getRandomInt = (max) => {
     return Math.floor(Math.random() * max);
   };
 
-  useEffect(() => setStack(cards), []);
+  useEffect(() => {
+    setStack(cards);
+  }, []);
 
-  //   const Deck = () => {
-  //     let wrapper = [];
-  //     for (const color in stack) {
-  //       if (stack.hasOwnProperty(color)) {
-  //         stack[color].forEach((number) => {
-  //           wrapper.push(<Card color={color} number={number} />);
-  //         });
-  //       }
-  //     }
-  //     return wrapper;
-  //   };
-  const PickCard = (setCardState, cardState = false) => {
+  useEffect(() => {
+    stack.length === 44 && setBaseCard(PickCard());
+  }, [stack]);
+
+  useEffect(() => {
+    baseCard && shareCard();
+  }, [baseCard]);
+
+  const PickCard = () => {
     const tempStack = stack;
     let givenCard;
     const randIdx = getRandomInt(stack.length);
@@ -78,32 +80,57 @@ function GameLayout() {
     givenCard = randomCard;
     tempStack.splice(randIdx, 1);
     setStack([...tempStack]);
-    if (!cardState) {
-      setCardState(givenCard);
-    } else {
-      const temp = cardState;
-      setCardState([...temp]);
-    }
-    // console.log(givenCard);
+    return givenCard;
   };
+
+  const shareCard = () => {
+    let player1Deck = playerDeck.player1;
+    let player2Deck = playerDeck.player2;
+    for (let i = 0; i < 8; i++) {
+      i % 2 ? player1Deck.push(PickCard()) : player2Deck.push(PickCard());
+    }
+    setPlayerDeck({ player2: player2Deck, player1: player1Deck });
+  };
+
   return (
-    <div className="min-h-screen flex gap-2 flex-wrap justify-center items-center">
-      <Card color="black" action={() => PickCard(setBaseCard)} id="pickCard" />
-      <div>
-        {baseCard && <Card color={baseCard.color} number={baseCard.number} id={`baseCard`} />}
+    <div className="min-h-screen grid grid-rows-2 gap-2">
+      <div className="grid grid-cols-2 w-full gap-2 relative justify-center items-center">
+        <div className="flex flex-col items-center">
+          {baseCard && <Card color={baseCard.color} number={baseCard.number} id={`baseCard`} />}
+        </div>
+        <div className="flex flex-col items-center">
+          {stack.length && <Card color="black" id="pickCard" />}
+          <p className="text-xs">Remaining Card : {stack.length}</p>
+        </div>
       </div>
-      {/* <Deck /> */}
-      {/* {Object.keys(stack).forEach(
-        (color) =>
-          //   console.log(stack[color])
-          // stack[color].forEach((number) => <Card color={color} number={number} />)
-          stack[color].forEach((number) => (
-            <p>
-              {color}:{number}
-            </p>
-          ))
-        // stack[color].forEach((number) => alert(`color ${color} : ${number}`))
-      )} */}
+      <div className="grid grid-cols-2 gap-6">
+        <div className="flex flex-col px-6">
+          <p className="">P1 Decks</p>
+          <div className="overflow-x-scroll flex gap-2 py-4">
+            {playerDeck.player1.map((card, idx) => (
+              <Card
+                color={card.color}
+                number={card.number}
+                key={`player1-${idx}`}
+                id={`player1-${idx}`}
+              />
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-col px-6">
+          <p className="">P2 Decks</p>
+          <div className="overflow-x-scroll flex gap-2 py-4">
+            {playerDeck.player2.map((card, idx) => (
+              <Card
+                color={card.color}
+                number={card.number}
+                key={`player2-${idx}`}
+                id={`player2-${idx}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
